@@ -30,13 +30,13 @@
 
 //Kalibratie constanten
 const float kalibratieFactorTop_hoog = 1.0;
-const float kalibratieOffsetTop_hoog = 0.6;
+const float kalibratieOffsetTop_hoog = 0.35;
 const float kalibratieFactorTop_laag = 1.0;
-const float kalibratieOffsetTop_laag = 0.6;
+const float kalibratieOffsetTop_laag = 0.7;
 const float kalibratieFactorBottom_hoog = 1.0;
-const float kalibratieOffsetBottom_hoog = 0.6;
+const float kalibratieOffsetBottom_hoog = 0.35;
 const float kalibratieFactorBottom_laag = 1.0;
-const float kalibratieOffsetBottom_laag = 0.6;
+const float kalibratieOffsetBottom_laag = 0.75;
 const float kalibratieFactorVs = 1.0;
 const float kalibratieOffsetVs = 0.0;
 
@@ -63,6 +63,7 @@ void disablePWM() {
   highestvoltage_bottom = 0;
   lowestvoltage_bottom = 16383;
 }
+
 //PWM signalen inschakelen
 void enablePWM() {
   analogWrite(TOP_PWM_UIT_PIN, 128);
@@ -73,6 +74,7 @@ void enablePWM() {
 bool isPWMDisabled() {
   return PWMDisabled; 
 }
+
 //Functie voor het selecteren van de I2C MUX poort
 void pcaselect(uint8_t i) {
   if (i > 3) return;
@@ -123,6 +125,7 @@ void updateVoltages_bottom() {
     }
   }
 }
+
 //Functie voor het in- en uitschakelen van de PWM signalen
 void schakel_pwm() {
   if (digitalRead(SCHAKELAAR_PIN) == HIGH) {
@@ -147,6 +150,7 @@ float controleer_vs(){
 
   return vs;
 }
+
 //Functie voor het weergeven van de testresultaten op de display's
 void displayVoltageData(Adafruit_SSD1306 &display, const char* titel, float hoog, float laag, bool schakelaar_toestand, float vs){
   display.clearDisplay();
@@ -213,20 +217,19 @@ void displayVoltageData(Adafruit_SSD1306 &display, const char* titel, float hoog
   }
 }
 
-
 void setup()
 {
   Wire.begin();
   Serial.begin(115200);
-  analogReadResolution(14);
-
-  pcaselect(0);
+  analogReadResolution(14); 
+ 
+  pcaselect(0); 
   display1.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR_1);
-  pcaselect(2);
+  pcaselect(2); 
   display2.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR_2);
-
-  //Configureer de GPIO pinnen (2,3)
-  pinMode(LAGE_VS_PIN, OUTPUT);
+ 
+  //Configureer de GPIO pinnen  (2,3)
+  pinMode(LAGE_VS_PIN, OUTPUT); 
   pinMode(KORTSLUITING_PIN, OUTPUT);
 
   //Configureer de GPIO pinnen (9,10,11)
@@ -245,25 +248,15 @@ void loop(){
 
 schakel_pwm();
 float vs = controleer_vs();
-/*
-if (vs < 13.2){
-    digitalWrite(LAGE_VS_PIN, HIGH);
-    digitalWrite(KORTSLUITING_PIN, HIGH);
-  } else {
-    digitalWrite(LAGE_VS_PIN, LOW);
-    digitalWrite(KORTSLUITING_PIN, LOW);
-  }
-  */
+
 bool schakelaar_toestand = digitalRead(SCHAKELAAR_PIN);
 updateVoltages_top();
 updateVoltages_bottom();
-
 
 float top_hoog_spanning = ((highestvoltage_top / 16383.0) * REF_VOLTAGE);
 float top_laag_spanning = ((lowestvoltage_top / 16383.0) * REF_VOLTAGE); 
 float bottom_hoog_spanning = ((highestvoltage_bottom / 16383.0) * REF_VOLTAGE);
 float bottom_laag_spanning = ((lowestvoltage_bottom / 16383.0) * REF_VOLTAGE);
-
 
 //ADC spanningswaarde uitprinten in de monitor
 Serial.print("Hoogste spanning gemeten(TOP): ");
@@ -275,20 +268,11 @@ Serial.println(bottom_hoog_spanning);
 Serial.print("Laagste spanning gemeten(BOTTOM): ");
 Serial.println(bottom_laag_spanning);
 
-
-/*
-float ADC_top_hoog_1 = (isPWMDisabled()) ? 0 : ((top_hoog_spanning) - 1.5) / 0.075;
-float ADC_top_laag_1 = (isPWMDisabled()) ? 0 : ((top_laag_spanning) - 1.5795831) / 0.07222622;
-
-float ADC_bottom_hoog_1 = (isPWMDisabled()) ? 0 : ((bottom_hoog_spanning)- 1.5) / 0.075;
-float ADC_bottom_laag_1 = (isPWMDisabled()) ? 0 : ((bottom_laag_spanning) - 1.5543) / 0.07;
-*/
-
 float ADC_top_hoog_1 = (isPWMDisabled()) ? 0 : (((top_hoog_spanning) - 1.5) / 0.075) * kalibratieFactorTop_hoog + kalibratieOffsetTop_hoog;
 float ADC_top_laag_1 = (isPWMDisabled()) ? 0 : (((top_laag_spanning) - 1.5) / 0.075) * kalibratieFactorTop_laag - kalibratieOffsetTop_laag;
 
 float ADC_bottom_hoog_1 = (isPWMDisabled()) ? 0 : (((bottom_hoog_spanning)- 1.5) / 0.075) * kalibratieFactorBottom_hoog + kalibratieOffsetBottom_hoog;
-float ADC_bottom_laag_1 = (isPWMDisabled()) ? 0 : (((bottom_laag_spanning) - 1.5) / 0.075)* kalibratieFactorBottom_hoog - kalibratieOffsetBottom_hoog;
+float ADC_bottom_laag_1 = (isPWMDisabled()) ? 0 : (((bottom_laag_spanning) - 1.5) / 0.075)* kalibratieFactorBottom_laag - kalibratieOffsetBottom_laag;
 //Gate uitgangsspanningen uitprinten in de monitor
 
 Serial.print("Top Vgate(Hoog)");
